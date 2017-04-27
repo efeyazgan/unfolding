@@ -62,6 +62,8 @@ void UEUnfold(){
    f.GetObject(name_h,rec_incchmult_bkg[4]);
    for (int i=0;i<5;i++) cout<<i<<"  "<<rec_incchmult_bkg[i]<<"  "<<rec_incchmult_bkg[i]->GetName()<<endl;
 
+
+
    sprintf(name_h,"m_%schavgpt/m_%schavgpt_t#bar{t}","inc","inc");
    f.GetObject(name_h,m_incchavgpt);
    sprintf(name_h,"gen_%schavgpt/gen_%schavgpt_t#bar{t}","inc","inc");
@@ -126,16 +128,10 @@ void UEUnfold(){
    
    for (int i=0;i<5;i++) cout<<i<<"  "<<rec_incchmult_bkg[i]<<"  "<<rec_incchmult_bkg[i]->GetName()<<endl;
 
-
-   cout<<"BURAYA KADAR TAMAM"<<endl;
-
    TString hname6(m_incchavgpt->GetName());
    hname6.ReplaceAll("t#bar{t}","tt");
    m_incchavgpt->SetName( hname6 );
    cout<<m_incchavgpt->GetName()<<endl;
-
-   cout<<"BURAYA KADAR TAMAM"<<endl;
-
 
    TString hname7(gen_incchavgpt->GetName());
    hname7.ReplaceAll("t#bar{t}","tt");
@@ -522,7 +518,7 @@ void UEUnfold(){
      unfold_incchmult.SetInput(rec_incchmult_toy,scaleBias);
      cout<<"IN TOY SWITCH"<<endl;
      cout<<"using optimum tau:  "<<opt_tau_incchmult<<endl;
-     unfold_incchmult.DoUnfold(0);
+     unfold_incchmult.DoUnfold(opt_tau_incchmult);
 
      unfolded_toy_incchmult = unfold_incchmult.GetOutput("unfolded_toy_incchmult",0,0,"",kFALSE);
    }
@@ -579,7 +575,8 @@ void UEUnfold(){
    bestRho_incchflux->Draw("*");
 
    tcanv->SaveAs("knots.C");
-   
+   tcanv->SaveAs("knots.pdf");  
+ 
    TCanvas *c2 = new TCanvas();
    c2->Divide(2,2);
    //   float scale = rec_incchmult_real->GetSumOfWeights()/gen_incchmult_real->GetSumOfWeights();
@@ -649,22 +646,25 @@ void UEUnfold(){
 
    char namepullbinfile[100];
    for (int i =0;i<5;i++){ 
-     sprintf(namepullbinfile,"pulls_file_bin%i",i);
+     sprintf(namepullbinfile,"pulls_file_bin%i.txt",i);
      pulls_file_bin[i].open(namepullbinfile,ios::app);
    }
    h_PULLS = new TH1D("h_PULLS","h_PULLS",100,-5,5);
   
-   float pull = -99;
+   float pull = -99.;
+   float pull_b[5];
    TCanvas *c_pull = new TCanvas();
    c_pull->cd();
    for (int i=0;i<5;i++){ 
      //if (unfolded->GetBinError(i+1)) 
+     pull_b[i] = -999.;
      pull = (unfolded_toy_incchmult->GetBinContent(i+1)-gen_incchmult->GetBinContent(i+1))/unfolded_toy_incchmult->GetBinError(i+1);
+     pull_b[i] = (unfolded_toy_incchmult->GetBinContent(i+1)-gen_incchmult->GetBinContent(i+1))/unfolded_toy_incchmult->GetBinError(i+1);
      h_PULLS->Fill(pull);
-     cout<<unfolded_toy_incchmult->GetBinContent(i+1)<<"  "<<gen_incchmult->GetBinContent(i+1)<<"  "<<unfolded_toy_incchmult->GetBinError(i+1)<<endl;
+     cout<<"pull toy, gen toy, err:  "<<unfolded_toy_incchmult->GetBinContent(i+1)<<"  "<<gen_incchmult->GetBinContent(i+1)<<"  "<<unfolded_toy_incchmult->GetBinError(i+1)<<endl;
      cout<<"pull:   "<<pull<<endl;
      pulls_file<< pull <<"\n";
-     pulls_file_bin[i]<<pull<<"\n";
+     pulls_file_bin[i]<<pull_b[i]<<"\n";
    }
    pulls_file.close();
    for (int i =0;i<5;i++) pulls_file_bin[i].close();
@@ -718,7 +718,7 @@ void UEUnfold(){
   c6->cd(3);
   EMatrixTotal_data_incchflux->Draw("colz");
   c6->SaveAs("error_matrices.C");
-
+  c6->SaveAs("error_matrices.pdf");
 }
 
 int main(int argc, char* argv[]){
