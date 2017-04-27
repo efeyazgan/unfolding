@@ -23,30 +23,44 @@ void plot_pulls() {
   char hname[100],fname[100];
   for (int i=0;i<5;i++){ 
     sprintf(hname,"pulls_bin_%i",i);
-    h_PULLS_BIN[i] = new TH1D(hname,hname,18,-4,4);
-    sprintf(fname,"pulls_file_bin%i",i);
+    h_PULLS_BIN[i] = new TH1D(hname,hname,17,-4,4);//18
+    sprintf(fname,"pulls_file_bin%i.txt",i);
     ifilebin[i].open(fname);
   }
 
+
+  TCanvas *c_p = new TCanvas();
+  c_p->Divide(3,2);
   TF1 *fit[5];
   float mean[5];
   float sigma[5];
   float bins[5];
+  int itest = 0;
+
   for (int i=0;i<5;i++){
     while(1){
       if (!ifilebin[i].good()) break;
       ifilebin[i] >> pullbin[i];
       h_PULLS_BIN[i]->Fill(pullbin[i]);
+      if (i==0){ 
+        itest++;
+	cout<<itest<<"  "<<pullbin[i]<<endl;  	
+      }
     }
     bins[i] = i+0.5;
+    c_p->cd(i+1);
     h_PULLS_BIN[i]->Draw();
+    //    mean[i] = h_PULLS_BIN[i]->GetMean();
+    //    sigma[i] = h_PULLS_BIN[i]->GetRMS();
     h_PULLS_BIN[i]->Fit("gaus");
     fit[i] = h_PULLS_BIN[i]->GetFunction("gaus");
     mean[i] = fit[i]->GetParameter(1);
     sigma[i] = fit[i]->GetParameter(2);
-    sprintf(hname,"pulls_histo_%i.C",i);    
-    h_PULLS_BIN[i]->SaveAs(hname);
   }
+  c_p->SaveAs("ind_pull_bin.C");
+  c_p->SaveAs("ind_pull_bin.pdf");
+
+
   gr = new TGraphErrors(5,bins,mean,0,sigma);
   gr->SetTitle("Pulls");
   gr->GetXaxis()->SetTitle("Bin #");
